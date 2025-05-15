@@ -24,3 +24,11 @@ Pada grafik spike, terjadi lonjakan yang cukup tinggi. Hal tersebut dikarenakan 
 ![subscriber 2](images/subscriber-2.png)
 
 Ketika saya menjalankan 10 cargo run secara berturut-turut dan tiga instance subscriber paralel, terlihat bahwa sekitar 50 pesan terbagi merata dengan masing-masing subscriber memproses sekitar 16-17 message, karena RabbitMQ mendistribusikan pesan secara round-robin dan setiap pesan diambil hanya sekali oleh salah satu subscriber lalu dihapus dari antrian. Akibatnya, spike pada grafik queued messages jauh lebih cepat mereda dibanding hanya dengan satu subscriber saja, karena antrian dikosongkan secara paralel oleh tiga konsumer yang lambat (1 detik per pesan). Pola ini mengonfirmasi bahwa menambah jumlah subscriber efektif mengatasi bottleneck di konsumer. Untuk membuat simulasi lebih realistis, selain delay di subscriber, kita bisa menambahkan delay pada sisi publisher atau menerapkan prefetch/QoS agar beban pengiriman dan penerimaan pesan lebih terkontrol.
+
+## Bonus
+
+### Simulation Slow Subscriber
+
+![cloud slow](images/bonus-slow.png)
+
+Berdasarkan grafik pada RabbitMQ dengan cloud diatas, menunjukkan spike yang lebih landai, sempat menurun, lalu menaik dan turun kembali secara perlahan, tidak se-ekstrem di localhost. Karena latensi jaringan ke RabbitMQ di EU-West-1 (Ireland), pengiriman lima pesan tidak terkirim sekaligus melainkan tersebar dalam interval lebih panjang dengan laju di bawah 1.0 pesan/detik, sehingga puncak antrean terdistribusi merata di bawah 3 pesan. Akibatnya, meski total pesan yang dikirim tetap 25 (5 × 5 run), subscriber hampir dapat menyusul kecepatan kirim publisher, dan antrean tidak pernah menumpuk banyak. Maksimum queued messages yang tercatat hanya sekitar 3, sehingga pola spike dan penurunannya jauh lebih teratur dibanding saat broker berjalan lokal.
