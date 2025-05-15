@@ -27,8 +27,18 @@ Ketika saya menjalankan 10 cargo run secara berturut-turut dan tiga instance sub
 
 ## Bonus
 
-### Simulation Slow Subscriber
+### Simulation Slow Subscriber on Cloud
 
 ![cloud slow](images/bonus-slow.png)
 
 Berdasarkan grafik pada RabbitMQ dengan cloud diatas, menunjukkan spike yang lebih landai, sempat menurun, lalu menaik dan turun kembali secara perlahan, tidak se-ekstrem di localhost. Karena latensi jaringan ke RabbitMQ di EU-West-1 (Ireland), pengiriman lima pesan tidak terkirim sekaligus melainkan tersebar dalam interval lebih panjang dengan laju di bawah 1.0 pesan/detik, sehingga puncak antrean terdistribusi merata di bawah 3 pesan. Akibatnya, meski total pesan yang dikirim tetap 25 (5 × 5 run), subscriber hampir dapat menyusul kecepatan kirim publisher, dan antrean tidak pernah menumpuk banyak. Maksimum queued messages yang tercatat hanya sekitar 3, sehingga pola spike dan penurunannya jauh lebih teratur dibanding saat broker berjalan lokal.
+
+
+### Reflection and Running at least three subscribers on Cloud
+
+![rabbitmq](images/bonus-running-3.png)
+![1](images/bonus-1.png)
+![2](images/bonus-2.png)
+![3](images/bonus-3.png)
+
+Berdasarkan grafik RabbitMQ dengan cloud, ketika tiga subscriber dijalankan bersamaan, jumlah queued messages nya selalu berjumlah 0 karena laju pengiriman dari publisher (≤ 1.0 pesan/detik) terdistribusi merata ke ketiga subscriber yang masing-masing mengambil sekitar 0.33 pesan/detik, sehingga kapasitas konsumsi total subscriber melebihi atau sama dengan laju publish. Berbeda dengan skenario localhost, di mana latensi rendah membuat publisher bisa mengirim batch pesan sangat cepat sehingga antrean sempat terbentuk, di cloud latensi menahan laju publish sehingga pesan langsung diambil, menghasilkan grafik message rate yang halus dengan puncak tidak lebih dari 1.0/s dan antrean yang selalu kosong.
