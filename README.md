@@ -14,3 +14,13 @@ Pada URI amqp://guest:guest@localhost:5672, kata guest sebelum tanda : adalah na
 ![slow subscriber](images/slow-subscriber.png)
 
 Pada grafik spike, terjadi lonjakan yang cukup tinggi. Hal tersebut dikarenakan setiap kali menjalankan `cargo run` publisher akan langsung mengirim 5 pesan ke broker, sedangkan subscriber yang lambat hanya memproses satu pesan per detik, ketika saya menjalankan publisher sebanyak 5 kali berturut-turut berarti telah mengantri 5 × 5 = 25 pesan, tetapi pada saat saya cek subscriber baru sempat mengkonsumsi sekitar 4 pesan, sehingga tersisa 21 pesan di dalam antrian. Dengan demikian, itulah yang menyebabkan jumlah queued messages membengkak sebelum akhirnya subscriber bisa mengejar dan memprosesnya satu per satu.
+
+
+### Reflection and Running at least three subscribers
+
+![running 3 subs](images/running-3-subscriber.png)
+![subscriber 1](images/subscriber-1.png)
+![subscriber 3](images/subscriber-3.png)
+![subscriber 2](images/subscriber-2.png)
+
+Ketika saya menjalankan 10 cargo run secara berturut-turut dan tiga instance subscriber paralel, terlihat bahwa sekitar 50 pesan terbagi merata dengan masing-masing subscriber memproses sekitar 16-17 message, karena RabbitMQ mendistribusikan pesan secara round-robin dan setiap pesan diambil hanya sekali oleh salah satu subscriber lalu dihapus dari antrian. Akibatnya, spike pada grafik queued messages jauh lebih cepat mereda dibanding hanya dengan satu subscriber saja, karena antrian dikosongkan secara paralel oleh tiga konsumer yang lambat (1 detik per pesan). Pola ini mengonfirmasi bahwa menambah jumlah subscriber efektif mengatasi bottleneck di konsumer. Untuk membuat simulasi lebih realistis, selain delay di subscriber, kita bisa menambahkan delay pada sisi publisher atau menerapkan prefetch/QoS agar beban pengiriman dan penerimaan pesan lebih terkontrol.
